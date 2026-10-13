@@ -3,122 +3,161 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>BSG MPP Timetable — Weekly</title>
+<title>BSG MPP Timetable — Week</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
+  @font-face{font-family:"Brandon Text";font-weight:300;src:local("Brandon Text Light"),url("./fonts/BrandonText-Light.woff2") format("woff2")}
+  @font-face{font-family:"Brandon Text";font-weight:400;src:local("Brandon Text Regular"),url("./fonts/BrandonText-Regular.woff2") format("woff2")}
+  @font-face{font-family:"Brandon Text";font-weight:500;src:local("Brandon Text Medium"),url("./fonts/BrandonText-Medium.woff2") format("woff2")}
+  @font-face{font-family:"Brandon Text";font-weight:700;src:local("Brandon Text Bold"),url("./fonts/BrandonText-Bold.woff2") format("woff2")}
   :root{
+    --head:"Brandon Text",Verdana,"Open Sans",Lato,"Helvetica Neue",Helvetica,Arial,sans-serif;
     --navy:#1F2A3E;
     --orange:#FF9600;
     --blue:#0067A0;
-    --ink:#1c1c1c;
-    --today:#FFE3BD;
+    --ink:#1F2A3E;
+    --muted:rgba(255,255,255,.64);
+    --line:rgba(255,255,255,.2);
   }
   *{box-sizing:border-box;margin:0;padding:0}
   html,body{
     width:100%;height:100%;
     background:var(--navy);
     overflow:hidden;
-    font-family:'Open Sans','Helvetica Neue',Arial,sans-serif;
+    font-family:'Open Sans',Lato,'Helvetica Neue',Helvetica,Arial,sans-serif;
   }
 
-  /* Fixed 1920x1080 stage, scaled to fit any screen */
+  /* Fixed 1920x1080 stage, scaled to fit any landscape screen */
   .stage{
     position:absolute;left:50%;top:50%;
     width:1920px;height:1080px;
     transform-origin:center center;
     background:var(--navy);
     color:#fff;
+    --fs:22px;
   }
 
   /* Header */
-  .accent{position:absolute;left:108px;top:75px;width:81px;height:5px;background:var(--orange)}
+  .accent{position:absolute;left:80px;top:58px;width:81px;height:5px;background:var(--orange)}
   h1{
-    position:absolute;left:108px;top:82px;
-    font-size:64px;font-weight:600;line-height:80px;letter-spacing:-0.01em;
+    position:absolute;left:80px;top:72px;
+    font-family:var(--head);font-size:56px;font-weight:300;line-height:84px;letter-spacing:.06em;text-transform:uppercase;
   }
-  .lbl{
-    position:absolute;top:75px;height:82px;line-height:82px;
-    font-size:38px;letter-spacing:0.18em;font-weight:400;
+  .week{
+    position:absolute;right:80px;top:72px;height:84px;
+    display:flex;align-items:center;gap:22px;
   }
-  .box{
-    position:absolute;top:75px;height:82px;
-    background:#fff;color:var(--ink);
-    font-size:26px;
-    display:flex;align-items:center;justify-content:center;
-  }
+  .week .wk{font-family:var(--head);font-size:34px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--orange)}
+  .week .rule{width:3px;height:40px;background:var(--line)}
+  .week .dates{font-size:34px;font-weight:400}
 
-  /* Table */
-  .table{
-    position:absolute;left:330px;top:205px;width:1336px;
-    display:grid;
-    grid-template-columns:170px 190px 570px 370px;
-    grid-template-rows:72px;
-    grid-auto-rows:66px;
-    gap:12px;
-    transition:opacity .3s ease;
+  /* Week grid */
+  .grid{
+    position:absolute;left:80px;right:80px;top:190px;height:830px;
+    display:grid;gap:20px;
   }
-  .th{
-    background:var(--orange);color:#fff;
-    font-size:24px;font-weight:600;letter-spacing:0.25em;
-    display:flex;align-items:center;justify-content:center;
-    padding-left:0.25em;
+  .day{display:flex;flex-direction:column;min-width:0;min-height:0}
+  .dh{
+    flex:none;
+    display:flex;justify-content:space-between;align-items:baseline;
+    padding:12px 16px;
+    border-bottom:3px solid var(--line);
   }
-  .td{
-    background:#fff;color:var(--ink);
-    font-size:20px;line-height:1.2;
-    display:flex;align-items:center;justify-content:center;
-    text-align:center;
-    padding:0 14px;
+  .dh .nm{font-family:var(--head);font-size:26px;font-weight:500;letter-spacing:.12em;text-transform:uppercase}
+  .dh .dt{font-size:21px;color:var(--muted)}
+  .day.today .dh{
+    background:var(--orange);color:var(--navy);
+    border-bottom-color:var(--orange);
+    border-radius:6px 6px 0 0;
+  }
+  .day.today .dh .dt{color:var(--navy);font-weight:600}
+
+  .cards{
+    flex:1;min-height:0;margin-top:14px;
+    display:flex;flex-direction:column;gap:10px;
     overflow:hidden;
   }
-  .td > span{
-    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+  .card{
+    flex:none;
+    border:1.5px solid rgba(255,255,255,.32);
+    border-radius:6px;
+    padding:.55em .8em .6em;
+    font-size:var(--fs);line-height:1.2;
   }
-  .td.must{color:var(--blue);font-weight:600}
-  .td.today.date{background:var(--today);font-weight:700}
+  .card .t{font-size:.9em;font-weight:700}
+  .card .n{font-weight:600;margin-top:.2em}
+  .card .l{font-size:.82em;margin-top:.3em;color:var(--muted)}
+  .card{background:#fff;border-color:#fff;color:var(--ink)}
+  .card .tag{display:inline-block;font-size:.62em;font-weight:700;letter-spacing:.04em;padding:.1em .7em;border-radius:999px;margin-bottom:.35em;background:#E3E6EA;color:#5b6672}
+  .card.must .n{color:var(--blue)}
+  .card .l{color:#5b6672}
+  .card .n{color:var(--navy)}
+  .card.now{box-shadow:0 0 0 3px var(--orange)}
+  .card.past{opacity:.4}
+  .none{font-size:var(--fs);color:var(--muted);padding:.3em .2em}
 
-  /* Decorative rules + legend, as in the reference */
-  .hline{position:absolute;left:0;top:1015px;width:840px;height:3px;background:var(--orange)}
-  .vline{position:absolute;left:1722px;top:205px;width:3px;height:875px;background:var(--orange)}
-  .legend{position:absolute;left:38px;top:905px;width:270px;font-size:30px;line-height:1.4}
-
-  .dots{position:absolute;left:330px;width:1336px;top:998px;text-align:center;font-size:0}
-  .dots i{display:inline-block;width:12px;height:12px;border-radius:50%;margin:0 7px;background:rgba(255,255,255,.35)}
-  .dots i.on{background:var(--orange)}
+  .legend{
+    position:absolute;left:80px;bottom:30px;
+    display:flex;align-items:center;gap:36px;
+    font-size:20px;color:var(--muted);
+  }
+  .sw{display:inline-block;width:28px;height:18px;border-radius:4px;vertical-align:-3px;margin-right:10px}
+  .sw.m{background:#fff}
+  .sw.o{border:1.5px solid rgba(255,255,255,.55)}
 
   .msg{
-    position:absolute;left:330px;top:205px;width:1336px;height:300px;
-    display:flex;align-items:center;justify-content:center;
-    font-size:34px;color:rgba(255,255,255,.8);text-align:center;
+    position:absolute;left:80px;right:80px;top:300px;
+    text-align:center;font-size:36px;color:var(--muted);
   }
+
+  .dots{position:absolute;right:80px;bottom:36px;font-size:0}
+  .dots i{display:inline-block;width:12px;height:12px;border-radius:50%;margin-left:12px;background:rgba(255,255,255,.3)}
+  .dots i.on{background:var(--orange)}
+
+  .card .l{text-wrap:balance}
+  .card .t .d{font-style:normal}
+  .grid.wide .card{
+    display:grid;grid-template-columns:3.6em 1fr;column-gap:.9em;align-items:center;
+  }
+  .grid.wide .card .t{display:flex;flex-direction:column;font-size:1em;line-height:1.15}
+  .grid.wide .card .t .ts{font-size:1.15em}
+  .grid.wide .card .t .te{font-size:.78em;font-weight:600;opacity:.75}
+  .grid.wide .card .t .d{display:none}
+  .grid.wide .card .t .te::before{content:'to '}
+  .grid.wide .card .n{margin-top:0}
+  .grid.fade{animation:fadein .4s ease}
+  @keyframes fadein{from{opacity:0}to{opacity:1}}
+  @media (prefers-reduced-motion:reduce){.grid.fade{animation:none}}
 </style>
 </head>
 <body>
 <div class="stage" id="stage">
   <div class="accent"></div>
   <h1>MPP Timetable</h1>
-  <div class="lbl" style="left:1090px">week</div>
-  <div class="box" style="left:1239px;width:75px" id="weekNo">–</div>
-  <div class="lbl" style="left:1350px">dates</div>
-  <div class="box" style="left:1504px;width:308px" id="weekDates">—</div>
+  <div class="week" id="week">
+    <span class="wk" id="wk">Week 3</span>
+    <span class="rule" id="rule"></span>
+    <span class="dates" id="dates">—</span>
+  </div>
 
-  <div class="table" id="table"></div>
+  <div class="grid" id="grid"></div>
   <div class="msg" id="msg" style="display:none"></div>
-  <div class="dots" id="dots"></div>
 
-  <div class="legend">Sessions in blue are mandatory</div>
-  <div class="hline"></div>
-  <div class="vline"></div>
+  <div class="legend">
+    <span>Sessions in blue are mandatory</span>
+  </div>
+  <div class="dots" id="dots"></div>
 </div>
 
 <script>
 /* ---- Settings ---------------------------------------------------------- */
-const CSV_URL       = './timetable.csv';
-const WEEK_1_START  = '2026-09-28';  // Monday of teaching week 1; leave '' to hide the week number
-const ROWS_PER_PAGE = 9;             // rows that fit on one screen
-const PAGE_SECONDS  = 12;            // how long each page is shown
-const RELOAD_MINUTES = 10;           // how often timetable.csv is re-fetched
+const CSV_URL        = './timetable.csv';
+const WEEK_1_START   = '2026-09-28';  // Monday of teaching week 1; leave '' to hide the week number
+const REFRESH_SECONDS = 30;           // how often the NOW / past states update
+const RELOAD_MINUTES  = 10;           // how often timetable.csv is re-fetched
+const MIN_FS          = 18;           // smallest text (px on the 1920x1080 stage) before a busy week is split over two screens
+const PAGE_SECONDS    = 14;           // how long each screen shows when a week is split
 
 /* ---- CSV parser (quoted fields, embedded commas/quotes, CRLF) ---------- */
 function parseCSV(text){
@@ -151,15 +190,17 @@ function parseCSV(text){
 }
 
 /* ---- Helpers ------------------------------------------------------------ */
-const pad = n => String(n).padStart(2,'0');
 const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 const toDate = dmy => { const [d,m,y] = dmy.split('/').map(Number); return new Date(y, m-1, d); };
 const toMinutes = hm => { const [h,m] = hm.split(':').map(Number); return h*60+m; };
 const shortTime = hm => hm.replace(/^0/,'');
-const ddmm = d => pad(d.getDate()) + '/' + pad(d.getMonth()+1);
 const sameDay = (a,b) => a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate();
+const dayStart = d => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+const DAY_NAMES = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const MONTHS_LONG = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 function mondayOf(d){
-  const x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const x = dayStart(d);
   x.setDate(x.getDate() - ((x.getDay()+6) % 7));
   return x;
 }
@@ -169,24 +210,21 @@ function currentTime(){
   return o ? new Date(o) : new Date();
 }
 
-/* ---- State -------------------------------------------------------------- */
+/* ---- Data --------------------------------------------------------------- */
 let sessions = [];
-let pages = [];
-let pageIdx = 0;
-let today = new Date();
 
 function buildSessions(csvText){
   sessions = parseCSV(csvText).map(s => ({
     ...s,
     dateObj: toDate(s['Date']),
     startMin: toMinutes(s['Start Time']),
+    endMin: toMinutes(s['End Time']),
     mandatory: s['Session Name'].startsWith('*'),
     name: s['Session Name'].replace(/^\*/,'').trim()
   })).sort((a,b) => (a.dateObj - b.dateObj) || (a.startMin - b.startMin) || a.name.localeCompare(b.name));
 }
 
-/* Pick the week to show: this week if it has sessions, else the next week
-   that does, else the most recent one. */
+/* This week if it has sessions, else the next week that does, else the latest. */
 function pickWeek(now){
   const byWeek = new Map();
   sessions.forEach(s => {
@@ -202,74 +240,127 @@ function pickWeek(now){
   return { monday: new Date(key), list: byWeek.get(key) };
 }
 
-function rebuild(){
+function rangeText(a,b){
+  if(a.getMonth() === b.getMonth()) return `${a.getDate()} – ${b.getDate()} ${MONTHS_LONG[a.getMonth()]}`;
+  return `${a.getDate()} ${MONTHS[a.getMonth()]} – ${b.getDate()} ${MONTHS[b.getMonth()]}`;
+}
+
+/* ---- Render ------------------------------------------------------------- */
+let pages = [];
+let pageIdx = 0;
+let firstRender = true;
+
+function dayHTML(day, nowMin){
+  let html = `<section class="day${day.isToday?' today':''}">`
+           + `<div class="dh"><span class="nm">${DAY_NAMES[day.date.getDay()]}</span><span class="dt">${day.date.getDate()} ${MONTHS[day.date.getMonth()]}</span></div>`
+           + `<div class="cards">`;
+  if(!day.items.length) html += `<div class="none">No sessions</div>`;
+  day.items.forEach(s => {
+    const ended = day.dayPast || (day.isToday && nowMin >= s.endMin);
+    const live = day.isToday && nowMin >= s.startMin && nowMin < s.endMin;
+    html += `<div class="card${s.mandatory?' must':''}${live?' now':''}${ended?' past':''}">`
+          + `<div class="t"><span class="ts">${shortTime(s['Start Time'])}</span><span class="te"><i class="d"> – </i>${shortTime(s['End Time'])}</span></div>`
+          + `<div class="bd">${s.mandatory?'':'<span class="tag">Optional</span>'}<div class="n">${esc(s.name)}</div>`
+          + (s['Location'] ? `<div class="l">${esc(s['Location'])}</div>` : '')
+          + `</div></div>`;
+  });
+  return html + `</div></section>`;
+}
+
+function drawGrid(dayList, cols, nowMin, wide){
+  const grid = document.getElementById('grid');
+  grid.classList.toggle('wide', !!wide);
+  grid.style.gridTemplateColumns = `repeat(${cols}, minmax(0,1fr))`;
+  grid.innerHTML = dayList.map(d => dayHTML(d, nowMin)).join('');
+}
+
+/* Largest text size (px) at which every day fits its column; 0 if none does. */
+function fitFs(maxFs, minFs){
+  const stage = document.getElementById('stage');
+  const cols = [...document.querySelectorAll('.cards')];
+  for(let fs=maxFs; fs>=minFs; fs--){
+    stage.style.setProperty('--fs', fs + 'px');
+    if(cols.every(c => c.scrollHeight <= c.clientHeight + 1)) return fs;
+  }
+  return 0;
+}
+
+function render(flip){
   const now = currentTime();
-  today = now;
-  const wk = pickWeek(now);
-  const table = document.getElementById('table');
+  const grid = document.getElementById('grid');
   const msg = document.getElementById('msg');
+  const stage = document.getElementById('stage');
+  const wk = pickWeek(now);
 
   if(!wk){
-    table.style.display = 'none';
-    msg.style.display = 'flex';
+    grid.style.display = 'none';
+    msg.style.display = 'block';
     msg.textContent = 'No timetable available';
-    document.getElementById('weekNo').textContent = '–';
-    document.getElementById('weekDates').textContent = '—';
-    pages = []; renderDots();
+    document.getElementById('week').style.display = 'none';
+    document.getElementById('dots').innerHTML = '';
     return;
   }
-  table.style.display = 'grid';
+  grid.style.display = 'grid';
   msg.style.display = 'none';
+  document.getElementById('week').style.display = 'flex';
 
-  // Header boxes
-  let weekNo = '–';
+  // Show Monday–Friday, plus the weekend only if something is scheduled then
+  const hasWeekend = wk.list.some(s => ((s.dateObj.getDay()+6)%7) >= 5);
+  const count = hasWeekend ? 7 : 5;
+  const last = new Date(wk.monday); last.setDate(last.getDate() + count - 1);
+
+  // Header: week number + date range
+  let weekNo = 0;
   if(WEEK_1_START){
-    const n = Math.round((wk.monday - toDate(WEEK_1_START.split('-').reverse().join('/'))) / (7*86400000)) + 1;
-    if(n >= 1) weekNo = String(n);
+    const [y,m,d] = WEEK_1_START.split('-').map(Number);
+    weekNo = Math.round((wk.monday - new Date(y,m-1,d)) / (7*86400000)) + 1;
   }
-  document.getElementById('weekNo').textContent = weekNo;
-  const friday = new Date(wk.monday); friday.setDate(friday.getDate()+4);
-  const lastDay = wk.list[wk.list.length-1].dateObj;
-  document.getElementById('weekDates').textContent = ddmm(wk.monday) + ' - ' + ddmm(lastDay > friday ? lastDay : friday);
+  const hasWk = weekNo >= 1;
+  document.getElementById('wk').style.display = hasWk ? '' : 'none';
+  document.getElementById('rule').style.display = hasWk ? '' : 'none';
+  document.getElementById('wk').textContent = 'Week ' + weekNo;
+  document.getElementById('dates').textContent = rangeText(wk.monday, last);
 
-  // Paginate
-  pages = [];
-  for(let i=0;i<wk.list.length;i+=ROWS_PER_PAGE) pages.push(wk.list.slice(i,i+ROWS_PER_PAGE));
-  pageIdx = Math.min(pageIdx, pages.length-1);
-  renderPage();
-  renderDots();
-}
+  // Day objects
+  const nowMin = now.getHours()*60 + now.getMinutes();
+  const todayStart = dayStart(now).getTime();
+  const days = [];
+  for(let i=0;i<count;i++){
+    const d = new Date(wk.monday); d.setDate(d.getDate()+i);
+    days.push({
+      date: d,
+      isToday: sameDay(d, now),
+      dayPast: d.getTime() < todayStart,
+      items: wk.list.filter(s => sameDay(s.dateObj, d))
+    });
+  }
 
-function renderPage(){
-  const table = document.getElementById('table');
-  let html = ['Date','Time','Session Name','Location'].map(h => `<div class="th">${h}</div>`).join('');
-  (pages[pageIdx] || []).forEach(s => {
-    const isToday = sameDay(s.dateObj, today);
-    const must = s.mandatory ? ' must' : '';
-    html += `<div class="td date${isToday?' today':''}"><span>${esc(s['Date'])}</span></div>`
-          + `<div class="td"><span>${shortTime(s['Start Time'])} - ${shortTime(s['End Time'])}</span></div>`
-          + `<div class="td${must}"><span>${esc(s.name)}</span></div>`
-          + `<div class="td"><span>${esc(s['Location'])}</span></div>`;
-  });
-  table.innerHTML = html;
-}
+  // Try the whole week on one screen; if text would be too small, split it in two.
+  drawGrid(days, count, nowMin, false);
+  let fs = fitFs(24, MIN_FS);
+  if(fs){
+    pages = [{ days, cols: count }];
+  } else {
+    const k = Math.ceil(count/2);
+    pages = [{ days: days.slice(0,k), cols: k }, { days: days.slice(k), cols: count-k }];
+    fs = 26;
+    pages.forEach(p => { drawGrid(p.days, p.cols, nowMin, true); fs = Math.min(fs, fitFs(26, 12) || 12); });
+  }
 
-function renderDots(){
-  const el = document.getElementById('dots');
-  el.innerHTML = pages.length > 1
-    ? pages.map((_,i) => `<i class="${i===pageIdx?'on':''}"></i>`).join('')
-    : '';
-}
+  // On first draw of a split week, start on the screen that has today in it
+  if(firstRender){
+    const t = pages.findIndex(p => p.days.some(d => d.isToday));
+    pageIdx = t >= 0 ? t : 0;
+    firstRender = false;
+  }
+  pageIdx = pageIdx % pages.length;
 
-function nextPage(){
-  if(pages.length < 2) return;
-  const table = document.getElementById('table');
-  table.style.opacity = 0;
-  setTimeout(() => {
-    pageIdx = (pageIdx + 1) % pages.length;
-    renderPage(); renderDots();
-    table.style.opacity = 1;
-  }, 300);
+  drawGrid(pages[pageIdx].days, pages[pageIdx].cols, nowMin, pages.length > 1);
+  stage.style.setProperty('--fs', fs + 'px');
+  if(flip){ grid.classList.remove('fade'); void grid.offsetWidth; grid.classList.add('fade'); }
+
+  document.getElementById('dots').innerHTML =
+    pages.length > 1 ? pages.map((_,i) => `<i class="${i===pageIdx?'on':''}"></i>`).join('') : '';
 }
 
 /* ---- Fit the 1920x1080 stage to whatever screen this is ---------------- */
@@ -286,20 +377,23 @@ async function loadData(){
     const res = await fetch(CSV_URL, {cache:'no-store'});
     if(!res.ok) throw new Error('HTTP ' + res.status);
     buildSessions(await res.text());
-    rebuild();
+    render();
   } catch(err){
     console.error('Could not load timetable.csv:', err);
     if(!sessions.length){
-      document.getElementById('table').style.display = 'none';
+      document.getElementById('grid').style.display = 'none';
+      document.getElementById('week').style.display = 'none';
       const msg = document.getElementById('msg');
-      msg.style.display = 'flex';
+      msg.style.display = 'block';
       msg.textContent = 'Could not load timetable.csv';
     }
   }
 }
 
 loadData();
-setInterval(nextPage, PAGE_SECONDS*1000);
+if(document.fonts && document.fonts.ready) document.fonts.ready.then(() => { if(sessions.length) render(); });
+setInterval(() => { if(sessions.length) render(); }, REFRESH_SECONDS*1000);
+setInterval(() => { if(sessions.length && pages.length > 1){ pageIdx = (pageIdx + 1) % pages.length; render(true); } }, PAGE_SECONDS*1000);
 setInterval(loadData, RELOAD_MINUTES*60000);
 </script>
 </body>
