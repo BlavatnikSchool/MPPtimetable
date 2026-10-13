@@ -237,7 +237,7 @@ function render(){
   const list = document.getElementById('list');
   const msg = document.getElementById('msg');
 
-    `${pad(now.getDate())}/${pad(now.getMonth()+1)}/${now.getFullYear()}`;
+  document.getElementById('clockTime').textContent = pad(now.getHours()) + ':' + pad(now.getMinutes());
 
   const pick = pickDay(now);
   if(!pick){
