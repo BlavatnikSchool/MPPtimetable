@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>BSG MPP Timetable — Signage</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy: #1F2A3E;
+    --navy-deep: #141c2b;
+    --midblue: #0067A0;
+    --lightblue: #41B6E6;
+    --orange: #FF9600;
+    --offwhite: #F7F5F4;
+    --ink: #1c1c1c;
+    --slate: #5b6672;
+    --rule: #ddd8d0;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html,body{
+    width:100%; height:100%;
+    background:var(--offwhite);
+    color:var(--ink);
+    font-family: 'Open Sans', 'Helvetica Neue', Arial, sans-serif;
+    overflow:hidden;
+  }
+  .board{
+    display:flex;
+    flex-direction:column;
+    width:100vw;
+    height:100vh;
+  }
+  header{
+    background:var(--navy);
+    background-image: linear-gradient(180deg, var(--navy) 0%, var(--navy-deep) 100%);
+    color:var(--offwhite);
+    padding: 2.2vh 3vw 2vh 3vw;
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    border-bottom: 0.4vh solid var(--orange);
+  }
+  .brand{
+    display:flex;
+    flex-direction:column;
+    gap:0.3vh;
+  }
+  .brand .school{
+    font-family: 'Open Sans', sans-serif;
+    font-weight: 700;
+    font-size: 2.4vh;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--lightblue);
+  }
+  .brand .day{
+    font-family: 'Open Sans', sans-serif;
+    font-size: 5vh;
+    font-weight: 700;
+    line-height: 1.1;
+  }
+  .clock{
+    text-align:right;
+  }
+  .clock .time{
+    font-size: 5vh;
+    font-weight:700;
+    letter-spacing: 0.02em;
+  }
+  .clock .date{
+    font-size: 2vh;
+    color: var(--lightblue);
+    letter-spacing:0.05em;
+  }
+  main{
+    flex:1;
+    padding: 2vh 3vw;
+    overflow:hidden;
+  }
+  .rows{
+    display:flex;
+    flex-direction:column;
+    height:100%;
+  }
+  .row{
+    display:grid;
+    grid-template-columns: 15vw 1fr auto;
+    align-items:center;
+    column-gap: 2vw;
+    padding: 1.4vh 0;
+    border-bottom: 1px solid var(--rule);
+    flex:1;
+    min-height:0;
+  }
+  .row:last-child{ border-bottom:none; }
+  .row.past{ opacity:0.42; }
+  .row.now{
+    background: linear-gradient(90deg, rgba(255,150,0,0.12), rgba(255,150,0,0));
+    border-bottom-color: var(--orange);
+  }
+  .time-block{
+    font-family: 'Open Sans', sans-serif;
+    font-weight:700;
+    font-size: 3vh;
+    color: var(--navy);
+    white-space:nowrap;
+  }
+  .row.now .time-block{ color: var(--orange); }
+  .time-block .sep{
+    color: var(--slate);
+    font-weight:400;
+    font-size: 0.6em;
+    display:block;
+  }
+  .info .title{
+    font-size: 2.6vh;
+    font-weight:600;
+    line-height:1.25;
+  }
+  .info .meta{
+    margin-top:0.4vh;
+    font-size:1.7vh;
+    color: var(--slate);
+    text-transform:uppercase;
+    letter-spacing:0.04em;
+  }
+  .tag{
+    font-family: 'Open Sans', sans-serif;
+    font-size: 1.7vh;
+    font-weight:700;
+    letter-spacing:0.08em;
+    padding: 0.6vh 1.4vh;
+    border-radius: 999px;
+    border: 1.5px solid var(--slate);
+    color: var(--slate);
+    white-space:nowrap;
+  }
+  .row.now .tag{
+    color: #fff;
+    background: var(--orange);
+    border-color: var(--orange);
+  }
+  .row.next .tag{
+    color: var(--midblue);
+    border-color: var(--midblue);
+  }
+  .empty{
+    height:100%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-family: 'Open Sans', sans-serif;
+    font-size: 3.5vh;
+    color: var(--slate);
+  }
+  footer{
+    padding: 1vh 3vw;
+    font-size: 1.4vh;
+    color: var(--slate);
+    letter-spacing:0.05em;
+    text-align:right;
+    border-top: 1px solid var(--rule);
+  }
+</style>
+</head>
+<body>
+<div class="board">
+  <header>
+    <div class="brand">
+      <div class="school">Blavatnik School of Government · MPP</div>
+      <div class="day" id="dayLabel">—</div>
+    </div>
+    <div class="clock">
+      <div class="time" id="clockTime">--:--</div>
+      <div class="date" id="clockDate">—</div>
+    </div>
+  </header>
+  <main>
+    <div class="rows" id="rows"></div>
+  </main>
+  <footer>Updates automatically · source: student timetable feed</footer>
+</div>
+
+<script>
+/* ---- 1. DATA SOURCE ----------------------------------------------------
+   Fetches timetable.csv from the same folder as this page (same-origin,
+   so no CORS issues). Refreshed every 10 minutes in case the file has
+   been replaced, so a long-running screen picks up new weeks on its own.
+------------------------------------------------------------------------ */
+const CSV_URL = './timetable.csv';
+
+/* ---- 2. LIVE CLOCK -----------------------------------------------------
+   Uses the real system clock and re-renders every 30 seconds so the
+   NOW / NEXT highlight moves on its own through the day.
+------------------------------------------------------------------------ */
+
+/* ---- 3. CSV PARSER (handles quoted fields, embedded commas/quotes) --- */
+function parseCSV(text){
+  const rows = [];
+  let row = [], field = '', inQuotes = false;
+  for(let i=0;i<text.length;i++){
+    const c = text[i], n = text[i+1];
+    if(inQuotes){
+      if(c === '"' && n === '"'){ field+='"'; i++; }
+      else if(c === '"'){ inQuotes = false; }
+      else { field += c; }
+    } else {
+      if(c === '"'){ inQuotes = true; }
+      else if(c === ','){ row.push(field); field=''; }
+      else if(c === '\n' || c === '\r'){
+        if(c === '\r' && n === '\n') i++;
+        row.push(field); field='';
+        if(row.length>1 || row[0] !== ''){ rows.push(row); }
+        row = [];
+      } else { field += c; }
+    }
+  }
+  if(field.length || row.length){ row.push(field); rows.push(row); }
+  const header = rows.shift().map(h=>h.trim());
+  return rows.filter(r=>r.length>1).map(r=>{
+    const obj = {};
+    header.forEach((h,idx)=> obj[h] = (r[idx]||'').trim());
+    return obj;
+  });
+}
+
+function toDate(dmy){ // dd/mm/yyyy -> Date
+  const [d,m,y] = dmy.split('/').map(Number);
+  return new Date(y, m-1, d);
+}
+function toMinutes(hm){
+  const [h,m] = hm.split(':').map(Number);
+  return h*60+m;
+}
+function sameDay(a,b){
+  return a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate();
+}
+
+let sessions = [];
+
+function buildSessions(csvText){
+  sessions = parseCSV(csvText).map(s => ({
+    ...s,
+    dateObj: toDate(s['Date']),
+    startMin: toMinutes(s['Start Time']),
+    endMin: toMinutes(s['End Time']),
+    mandatory: s['Session Name'].trim().startsWith('*'),
+    name: s['Session Name'].replace(/^\*/,'').trim()
+  })).sort((a,b)=> a.startMin - b.startMin);
+}
+
+async function loadData(){
+  try{
+    const res = await fetch(CSV_URL, {cache:'no-store'});
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    const text = await res.text();
+    buildSessions(text);
+  } catch(err){
+    console.error('Could not load timetable.csv:', err);
+    document.getElementById('rows').innerHTML =
+      '<div class="empty">Could not load timetable.csv — check the file is in the same folder as this page</div>';
+  }
+}
+
+function render(now){
+  const today = sessions.filter(s => sameDay(s.dateObj, now));
+  const dayLabel = document.getElementById('dayLabel');
+  const rowsEl = document.getElementById('rows');
+  rowsEl.innerHTML = '';
+
+  dayLabel.textContent = now.toLocaleDateString('en-GB', { weekday:'long', day:'numeric', month:'long' });
+
+  if(today.length === 0){
+    rowsEl.innerHTML = '<div class="empty">No sessions scheduled today</div>';
+    return;
+  }
+
+  const nowMin = now.getHours()*60 + now.getMinutes();
+  const next = today.find(s => s.startMin > nowMin);
+
+  today.forEach(s => {
+    const isNow = nowMin >= s.startMin && nowMin < s.endMin;
+    const isPast = nowMin >= s.endMin;
+    const isNext = next && s === next;
+
+    const row = document.createElement('div');
+    row.className = 'row' + (isNow?' now':'') + (isPast?' past':'') + (isNext?' next':'');
+
+    row.innerHTML = `
+      <div class="time-block">${s['Start Time']}<span class="sep">${s['End Time']}</span></div>
+      <div class="info">
+        <div class="title">${s.name}</div>
+        <div class="meta">${[s['Location'], s['Seminar Groups']].filter(Boolean).join(' · ') || '&nbsp;'}</div>
+      </div>
+      ${isNow ? '<div class="tag">NOW</div>' : isNext ? '<div class="tag">NEXT</div>' : ''}
+    `;
+    rowsEl.appendChild(row);
+  });
+}
+
+function tick(){
+  // Testing aid: add ?now=2026-10-14T10:15 to the URL to preview a specific moment
+  const override = new URLSearchParams(location.search).get('now');
+  const now = override ? new Date(override) : new Date();
+  document.getElementById('clockTime').textContent =
+    now.toLocaleTimeString('en-GB', {hour:'2-digit', minute:'2-digit'});
+  document.getElementById('clockDate').textContent =
+    now.toLocaleDateString('en-GB', {day:'2-digit', month:'2-digit', year:'numeric'});
+  render(now);
+}
+
+(async function start(){
+  await loadData();       // load the CSV once at page load
+  tick();                 // then draw immediately
+  setInterval(tick, 30000);       // redraw clock/highlight every 30s
+  setInterval(loadData, 10*60000); // re-fetch timetable.csv every 10 min
+})();
+</script>
+</body>
+</html>
