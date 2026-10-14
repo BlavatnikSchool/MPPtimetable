@@ -311,10 +311,12 @@ function fitText(){
 
 /* ---- Fit the 1080x1920 stage to whatever screen this is ---------------- */
 function fit(){
+  try{ if(new URLSearchParams(location.search).get('debug')){ const d=document.getElementById('dbg'); d.style.display='block'; d.textContent='viewport '+window.innerWidth+'x'+window.innerHeight+'  dpr '+window.devicePixelRatio+'  scale '+(Math.min(window.innerWidth/1080, window.innerHeight/1920)).toFixed(3); } }catch(e){}
   const s = Math.min(window.innerWidth/1080, window.innerHeight/1920);
   document.getElementById('stage').style.transform = `translate(-50%,-50%) scale(${s})`;
 }
 window.addEventListener('resize', fit);
+window.addEventListener('load', fit);
 fit();
 
 /* ---- Data loading ------------------------------------------------------- */
@@ -340,5 +342,6 @@ if(document.fonts && document.fonts.ready) document.fonts.ready.then(() => { if(
 setInterval(() => { if(sessions.length) render(); }, REFRESH_SECONDS*1000);
 setInterval(loadData, RELOAD_MINUTES*60000);
 </script>
+<div id="dbg" style="display:none;position:fixed;left:0;top:0;z-index:9;background:#000;color:#0f0;font:14px monospace;padding:6px 8px"></div>
 </body>
 </html>
